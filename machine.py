@@ -1,94 +1,29 @@
-from sklearn.naive_bayes import BernoulliNB
-from airplane import Airplane
-import numpy
+from bernoullinb import *
+from airplane_helpers import *
 
 
-def generate_airplane_array(size_of_array, supersonic_rate):
-    new_array = [] * size_of_array
-    for current_index in range(0, len(new_array)):
-        if needs_supersonic_aircraft(current_index, supersonic_rate):
-            is_supersonic = True
-        else:
-            is_supersonic = False
-
-        aircraft_id = current_index
-
-        new_array[current_index] = Airplane(is_supersonic, aircraft_id)
-
-    return new_array
-
-
-def needs_supersonic_aircraft(current_index, supersonic_rate):
-    supersonic_threshold = 0
-    supersonic_value = current_index * supersonic_rate
-
-    if current_index % supersonic_value == supersonic_threshold:
-        return True
-    else:
-        return False
-
-
-def get_speed_array(airplane_array):
-    speed_array = []
-
-    for airplane in airplane_array:
-        speed = airplane.get_air_speed_in_knots()
-        speed_array.append(speed)
-
-    return speed_array
-
-
-def get_is_supersonic_array(airplane_array):
-    is_supersonic_array = []
-
-    for airplane in airplane_array:
-        is_supersonic = airplane.is_supersonic_aircraft()
-        is_supersonic_array.append(is_supersonic)
-
-    return is_supersonic_array
-
-
-def get_id_array(airplane_array):
-    airplane_id_array = []
-
-    for airplane in airplane_array:
-        airplane_id = airplane.get_aircraft_id()
-        airplane_id_array.append(airplane_id)
-
-    return airplane_id_array
-
-
-def get_x_component(airplane_array):
-    airplane_id_array = get_id_array(airplane_array)
+def generate_bernoulli_nb(airplane_array, threshold):
     speed_array = get_speed_array(airplane_array)
-    length_of_arrays = len(airplane_array)
-
-    x_component = numpy.array([airplane_id_array, speed_array])
-    x_component = x_component.reshape(length_of_arrays, 2)
-
-    return x_component
-
-
-def get_y_component(airplane_array):
     is_supersonic_array = get_is_supersonic_array(airplane_array)
-    return is_supersonic_array
+    number_of_total_aircraft = len(airplane_array)
+    number_of_supersonic_aircraft = count_supersonic_aircraft(is_supersonic_array)
+    number_of_subsonic_aircraft = count_subsonic_aircraft(is_supersonic_array, number_of_supersonic_aircraft)
+    max_speed = 1133
+
+    bernoulli_nb = BernoulliNB(speed_array, is_supersonic_array, number_of_total_aircraft,
+                               number_of_supersonic_aircraft, number_of_subsonic_aircraft, max_speed, threshold)
+
+    return bernoulli_nb
 
 
-def generate_x_and_y(size_of_array, every_nth_aircraft_is_a_supersonic_plane):
-    supersonic_rate = float(1 / every_nth_aircraft_is_a_supersonic_plane)
-    airplane_array = generate_airplane_array(size_of_array, supersonic_rate)
+def get_predictions(airplane_array, bernoulli_nb):
+    predictions = []
+    speed_array = get_speed_array(airplane_array)
 
-    x_component = get_x_component(airplane_array)
-    y_component = get_y_component(airplane_array)
+    for speed in speed_array:
+        prediction = bernoulli_nb.predict(speed)
+        predictions.append(prediction)
 
-    return x_component, y_component
+    return predictions
 
 
-def count_true_predictions(boolean_array):
-    count = 0
-
-    for boolean in boolean_array:
-        if boolean:
-            count += 1
-
-    return count

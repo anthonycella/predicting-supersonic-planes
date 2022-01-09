@@ -1,6 +1,3 @@
-import random
-from random import random
-
 from numpy.random import randint
 
 

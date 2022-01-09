@@ -1,95 +1,47 @@
-from sklearn.naive_bayes import BernoulliNB
+import pickle
 
 import machine
+import results
+from airplane_helpers import *
 from airplane import Airplane
-import numpy as np
 
 
-def is_match(prediction, actual_result):
-    if prediction == actual_result:
-        return True
-    else:
-        return False
+def save_bernoulli_nb(bernoulli_nb):
+    bernoulli_nb_file = open('bernoulli_nb.dat', 'wb')
+    pickle.dump(bernoulli_nb, bernoulli_nb_file)
 
 
-def fill_array(empty_array):
-    new_array = empty_array
-    for current_index in range(0, len(empty_array)):
-        if current_index % 4 == 0:
-            is_supersonic = True
-        else:
-            is_supersonic = False
+def load_bernoulli_nb_from_file(file_name):
+    bernoulli_nb = "Can't think of what to put here as a placeholder"
+    try:
+        bernoulli_nb_file = open('bernoulli_nb.dat', 'rb')
+        bernoulli_nb = pickle.load(bernoulli_nb_file)
+    except():
+        print("Error: file not found")
 
-        new_array[current_index] = Airplane(is_supersonic, current_index)
-
-    return new_array
-
-
-def get_speed_array(airplane_array):
-    speed_array = []
-
-    for airplane in airplane_array:
-        speed = airplane.get_air_speed_in_knots()
-        speed_array.append(speed)
-
-    return speed_array
-
-
-def get_is_supersonic_array(airplane_array):
-    is_supersonic_array = []
-
-    for airplane in airplane_array:
-        is_supersonic = airplane.is_supersonic_aircraft()
-        is_supersonic_array.append(is_supersonic)
-
-    return is_supersonic_array
-
-
-def get_id_array(airplane_array):
-    airplane_id_array = []
-
-    for airplane in airplane_array:
-        airplane_id = airplane.get_aircraft_id()
-        airplane_id_array.append(airplane_id)
-
-    return airplane_id_array
-
-
-def print_out_array_to_console(airplane_array):
-    for airplane in airplane_array:
-        print(airplane)
-
-
-def print_accuracy_to_console(accuracy_number):
-    accuracy_percent = format(accuracy_number, '%.2f')
-    print("Accuracy: " + accuracy_percent)
+    return bernoulli_nb
 
 
 def main():
-    size = 1000000
-    empty_array = [None] * size
+    size_of_array = 100000
+    supersonic_rate = 9
+    number_of_tests = 100
 
-    filled_array = fill_array(empty_array)
-    # print_out_array_to_console(filled_array)
+    airplane_array = generate_airplane_array(size_of_array, supersonic_rate)
+    threshold = 0.45
+    bernoulli_nb = load_bernoulli_nb_from_file('bernoulli_nb.dat')
+    # bernoulli_nb = machine.generate_bernoulli_nb(airplane_array, threshold)
 
-    speed_array = get_speed_array(filled_array)
-    is_supersonic_array = get_is_supersonic_array(filled_array)
-    airplane_id_array = get_id_array(filled_array)
+    average_accuracy = results.get_average_accuracy(number_of_tests, bernoulli_nb, size_of_array, supersonic_rate)
+    accuracy_output = format((average_accuracy * 100), '.2f')
+    threshold_percent = str(threshold * 100) + '%'
+    print("Size of array:", size_of_array)
+    print("Every " + str(supersonic_rate) + " planes is a supersonic plane")
+    print("Number of tests:", number_of_tests)
+    print("Threshold:", threshold_percent)
+    print("Average Accuracy: " + accuracy_output + "%")
 
-    simple_machine = BernoulliNB()
-
-    X = np.array([airplane_id_array, speed_array])
-    X = X.reshape(size, 2)
-    Y = np.array(is_supersonic_array)
-
-    simple_machine.fit(X, Y)
-    predictions = simple_machine.predict(X[2:200])
-    actual_results = Y[2:200]
-
-    true_predictions = machine.count_true_predictions(predictions)
-    print(str(true_predictions))
-
-    print(simple_machine.score(X, Y))
+    # save_bernoulli_nb(bernoulli_nb)
 
 
 main()
