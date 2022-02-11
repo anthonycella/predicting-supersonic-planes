@@ -42,6 +42,9 @@ class BernoulliNB:
     def get_prediction_vocabulary(self):
         return self.__prediction_vocabulary
 
+    def get_probability_vocabulary(self):
+        return self.__probability_vocabulary
+
     def set_prediction_vocabulary(self, new_threshold):
         self.__prediction_vocabulary = generate_prediction_vocabulary(self.__probability_vocabulary, new_threshold)
 
